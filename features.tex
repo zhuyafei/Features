@@ -198,7 +198,7 @@
 %%---------------------------------------------------------------------
 %%---------------------------------------------------------------------
 % \titlepage
-\title{\vspace{-2em}图像特征\vspace{-0.7em}}
+\title{\vspace{-2em}显著性检测领域之图像特征\vspace{-0.7em}}
 \author{朱亚菲}
 \date{\vspace{-0.7em}2015年1月\vspace{-0.7em}}
 %%---------------------------------------------------------------------
@@ -210,19 +210,31 @@
 
 \section{引言}
 
-\section{局部图像特征描述}
-
-\url{http://www.sigvc.org/bbs/thread-165-1-1.html}
+图像特征分为局部特征和全局特征。
 
 局部特征，顾名思义就是一些局部才会出现的特征，
 
 局部图像特征描述的核心问题是不变性（鲁棒性）和可区分性。由于使用局部图像特征描述子的时候，通常是为了鲁棒地处理各种图像变换的情况。因此，在构建/设计特征描述子的时候，不变性问题就是首先需要考虑的问题。
 
-\section{全局图像特征描述}
-
 如果用户对整个图像的整体感兴趣，而不是对前景本身感兴趣的话，用全局特征来描述图像是比较合适的。但是无法分辨出前景和背景却是全局特征本身就有的劣势，特别是在关注的对象受到遮挡等影响的时候，全局特征很有可能就被破坏掉了。所以全局特征一般被用到图像检索、图像分类等领域。
 
-\subsection{图像直方图}
+在显著性检测中，由于关注的是显著目标，并且是在同一幅图像中进行中央-周围/局部/全局对比，而不是在图像间进行比较，因此用到的应该都是局部特征。显著性检测领域所说的局部和全局方法是指对某一像素或区域，在计算其对比度时是与周围相比还是与图像中所有其它像素或区域相比。
+
+基于像素级或block级的显著性检测方法中用到是center-surround contrast，而基于区域的方法用到的则是local contrast和global contrast，这是因为区域形状不规则，所以叫局部对比度。
+
+\section{基于像素点的特征}
+
+\url{http://www.sigvc.org/bbs/thread-165-1-1.html}
+
+\subsection{SIFT}
+
+SIFT特征（Scale-invariant transform，尺度不变特征变换）由David Lowe在1999年所发表，2004年完善总结。它是一种计算机视觉的算法，用来侦测与描述图像中的局部性特征，它在空间尺度中寻找极值点，并提取出其位置、尺度、旋转不变量。
+
+\section{基于区域的特征}
+
+\subsection{颜色特征}
+
+\subsubsection{颜色直方图}
 
 图像直方图是指统计图像中像素的灰度/颜色得到的图像灰度/颜色频数图。直方图由于其计算代价较小，且具有图像平移、旋转、缩放不变性等优点，广泛应用于图像处理的各个领域。Swain和Ballard最先提出了使用颜色直方图作为图像颜色特征的表示方法。
 
@@ -238,7 +250,7 @@
 
 得到图像颜色特征后 需要定义颜色特征的相似度量公式，以表示两幅图像间颜色的相似性。不同的相似性度量公式对实际应用结果可能影响很大。因此需要研究如何选择或设计合适的相似性度量算法。
 
-显著性Models中，CB、DRFI、HC/RC、HDCT方法都用到了颜色直方图。在显著性检测中，由于关注的是显著目标，并且用到中央-周围对比，因此用到的应该都是局部特征。
+显著性Models中，CB~\cite{jiang2011automatic}、DRFI~\cite{jiang2013salient}、HC/RC~\cite{cheng2011global}、HDCT~\cite{kim2014salient}方法都用到了颜色直方图。
 
 DRFI方法中关于图像RGB空间的颜色直方图代码如下：
 
@@ -258,9 +270,11 @@ DRFI方法中关于图像RGB空间的颜色直方图代码如下：
   \label{fig: RGBhistogram} %% label for entire figure 
 \end{figure}
 
-颜色空间
+\subsubsection{彩色模型}
 
-1）RGB颜色空间
+彩色模型（也称为彩色空间或彩色系统）的目的是在某些标准下用通常可以接受的方式方便地对彩色加以说明。
+
+1）RGB颜色模型
 
 RGB颜色空间是常用的表示彩色图像的一种颜色空间，它是以红、绿、蓝三种颜色为基础，亦称为“三原色”。所谓的“原色”是一种生物学概念，是根据人眼对光线感知的生理作用来定义的。每一种颜色按亮度进行分类，分成256个等级。不同比例的红、绿、蓝叠加，能产生丰富的颜色。例如，等比例的三原色进行相加可以产生白色，红色与绿色相加产生黄色。可见，RGB空间属于“叠加型”原色系统，因此把RGB颜色空间作为最基础的颜色空间，通过对RGB的非线性或线性变换可以获得其它的颜色空间。
 
@@ -272,6 +286,43 @@ CIE 1976 L*a*b颜色空间和CIE 1931 XYZ颜色空间的相同之处是，它们
 
 CIELAB系统使用的坐标叫做对色坐标(opponent color coordinate)，使用对色坐标的想法来自这样的概念：颜色不能同时是红和绿，或者同时是黄和蓝，但颜色可以被认为是红和黄、红和蓝、绿和黄以及绿和蓝的组合。CIELAB使用L*, a*和b*坐标轴定义CIE颜色空间。其中，L*值代表光亮度，其值从0（黑色）~100（白色）。a*和b*代表色度坐标，其中a*代表红-绿轴，b*代表黄-蓝轴，它们的值从0~10。$a*=b*=0$表示无色，因此L*就代表从黑到白的比例系数。
 
+\subsection{纹理特征}
+
+图像纹理一直到现在都没有一个一致的、公认的定义，它在图像中是一个重要但是又不太容易描述出来的特征。纹理是人们将人类的视觉与触觉联系起来，进而形成一个视觉信息，它起源于人类对事物的触感。
+
+LBP(Local Binary Pattern，局部二值模式)首先是由Ojala等人~\cite{ojala1994performance}于1994年提出，DRFI~\cite{jiang2013salient}中用到。
+
+如图~\ref{fig: LBP}
+
+\begin{figure}
+  \centering 
+  \subfigure[]{ 
+    \label{fig: LBP: a} %% label for first subfigure 
+    \includegraphics[width=0.45\textwidth]{example1.jpg}} 
+  \subfigure[]{ 
+    \label{fig: LBP: b} %% label for second subfigure 
+    \includegraphics[width=0.45\textwidth]{LBP1.png}} 
+  \caption{LBP}
+  \label{fig: LBP特征} %% label for entire figure 
+\end{figure}
+
+\subsection{位置特征}
+
+HDCT~\cite{kim2014salient}中用到
+
+\subsection{形状特征}
+
+区域面积
+
+该区域包含的超像素的个数
+
+奇异值特征
+
+奇异值特征（Singular Value Feature，SVF）~\cite{su2011blurred}被用来从测试图像中检测模糊区域，通常一幅图像中的模糊区域是背景的可能性较大。
+
+HOG特征
+
+HOG（Histogram of Gradients，梯度直方图）特征~\cite{felzenszwalb2010object}
 
 
 
@@ -288,20 +339,11 @@ CIELAB系统使用的坐标叫做对色坐标(opponent color coordinate)，使�
 
 
 
+%
+% references
+\bibliographystyle{plain}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+\bibliography{features} %参考文献
 
 
 \end{document}
