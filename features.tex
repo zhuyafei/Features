@@ -460,7 +460,9 @@ H(r_i) = \sum_{p=1}^{n_{c, i}}f(c_{p, i})\cdot log_2f(c_{p, i})
 
 \section{Feature Contrasts的融合}
 
-求出两个区域间关于多种关于visual cues的对比度之后，要先将这些对比度融合，例如可以相乘，求出最终的对比度公式。然后再对每个区域计算local或global contrast。
+目前来看，分为两种。
+
+1. 求出两个区域间关于多种关于visual cues的对比度之后，要先将这些对比度融合，例如可以相乘，求出最终的对比度公式。然后再对每个区域计算local或global contrast。
 
 论文~\cite{zhu2014tag}中，两个区域$r_i$、$r_j$间的最终的对比度定义如下：
 \begin{align}
@@ -475,6 +477,9 @@ w_{ij} = \frac{1}{Z_i}\cdot exp[-\sigma_s^2 \cdot D_s(r_i, r_j)]
 \end{align}
 其中，$\phi_j$是指区域$r_j$内的像素个数，即区域$r_j$的大小。$D_s(r_i, r_j)$表示区域$r_i$和$r_j$之间的空间距离。$\phi_s$则用来控制空间加权$w_{ij}$的影响程度，$\phi_s$越大，对$U(r_i)$的影响越小。$\frac{1}{Z_i}$是归一化因子，保证$\sum_{j \ne i}w_{ij} = 1$。
 
+2. 对每个visual cue求出local或global contrast之后，再对这些对比度进行融合。
+
+例如论文~\cite{yan2013hierarchical}中，
 
 \section{Priors}
 
