@@ -226,7 +226,7 @@
 
 图像特征又可以分为低层次特征和高层次特征。其中低层次特征是不需要任何形状信息(空间关系的信息)就可以从图像中自动提取的基本特征。高层次特征提取关心的是在图像中找出形状。例如，要自动识别人脸，一种方法是提取组成部分特征。也就是说，需要提取眼睛、耳朵和鼻子这些主要的脸部特征。这些特征可以利用它们的形状找到：眼睛的白色部分是椭圆形的；嘴巴可以看做是两条直线，眉毛也一样。形状提取意味着找出它们的位置、朝向和尺寸。所有低层次方法都可以应用于高层次特征提取，从而在图像中找到形状。
 
-\section{基于像素点的特征}
+\section{基于像素点的feature contrasts}
 
 \subsection{颜色特征}
 
@@ -271,20 +271,25 @@ D(x,y,e) = ((G(x,y,ke) - G(x,y,e)) * I(x,y) = L(x,y,ke) - L(x,y,e)
 
 SIFT特征一般用于匹配，在eye fixation prediction中有用到，而在显著性区域检测中没有见用的。
 
-\section{基于区域的特征}
+\section{基于区域的feature contrasts}
 
-问题：如果颜色均值是一种基于区域的特征，那么根据颜色均值求的对比度是特征吗？
+这里的feature contrasts是指由某种visual cue(比如颜色、纹理、位置等)对图像中两个区域$r_i$、$r_j$求出的区域间对比度。
 
-\subsection{颜色特征}
+\subsection{颜色}
 
-\subsubsection{颜色均值}
+\subsubsection{Color Contrast}
 
 论文~\cite{yan2013hierarchical}中用到，公式如下：
 \begin{align}
 C_i = \sum_{j=1}^{n}w(R_i)\Phi(i, j)||c_i-c_j||_2
 \end{align}
-
 其中，$c_i$和$c_j$分别是区域$R_i$和$R_j$内颜色的均值，$w(R_j)$表示区域$R_j$内的像素个数，$\Phi(i, j) = exp\{ -D(R_i, R_j)/\sigma^2\}$。
+
+论文~\cite{zhu2014tag}中用到，图像区域中方差不同的颜色之间的分布是相互独立的。区域$r_i$与$r_j$之间的color contrast定义如下：
+\begin{align}
+D_c(r_i, r_j) = ||\mu_{c, i}-\mu_{c, j}||^2\cdot \left(\frac{\sigma_{c, i}^2}{n_i}+\frac{\sigma_{c, j}^2}{n_j}\right)^{-\frac{1}{2}}
+\end{align}
+其中$\mu_{c, i}$和$\mu_{c, j}$分别表示区域$r_i$和$r_j$内的颜色均值，$\sigma_{c, i}^2$和$\sigma_{c, j}^2$表示方差，$n_i$和$n_j$表示相应区域内像素的个数。
 
 \subsubsection{颜色直方图}
 
@@ -437,23 +442,84 @@ G(x, y) & = \sqrt{G_x(x, y)^2 + G_y(x, y)^2}\\
 HDCT~\cite{kim2014salient}方法中用到HOG特征~\cite{felzenszwalb2010object}，采用的是VLFeat官网上的代码。论文中首先也是对图像进行超像素分割，然后求每个超像素区域内像素点坐标的平均值$(x_i, y_i)$，$i$代表第$i$个超像素区域，求该区域的HOG特征就是以该坐标点为中心的$17*17$的网格作为输入图像(只取该网格内图像r通道的值)，17作为cellSize，然后对每个超像素区域得到一个31维的HOG特征向量。
 
 
+\subsection{Visual Complexity Contrast}
+
+论文~\cite{zhu2014tag}中用到，信息论中可以用熵来计算visual complexity，区域$r_i$和$r_j$之间的visual complexity contrast $D_e(r_i, r_j)$就被定义为
+\begin{align}
+D_e(r_i, r_j) = [H(r_i)-H(r_j)]^2
+\end{align}
+其中，$H(r_i)$表示区域$r_i$内的熵
+\begin{align}
+H(r_i) = \sum_{p=1}^{n_{c, i}}f(c_{p, i})\cdot log_2f(c_{p, i})
+\end{align}
+其中，$c_{p, i}$是区域$r_i$中第$p$种颜色，$n_{c, i}$区域$r_i$中包含的颜色个数，$f(c_{p, i})$表示区域$r_i$中颜色$c_{p, i}$出现的概率。
+
+\subsection{Background Weighted Contrast}
+
+论文~\cite{zhu2014saliency}中用到
+
+\section{Feature Contrasts的融合}
+
+求出两个区域间关于多种关于visual cues的对比度之后，要先将这些对比度融合，例如可以相乘，求出最终的对比度公式。然后再对每个区域计算local或global contrast。
+
+论文~\cite{zhu2014tag}中，两个区域$r_i$、$r_j$间的最终的对比度定义如下：
+\begin{align}
+D_r(r_i, r_j) = D_c(r_i, r_j) \cdot exp[\sigma_e^2 \cdot D_e(r_i, r_j)]
+\end{align}
+其中$D_c(r_i, r_j)$是指color contrast，$D_c(r_i, r_j)$是指visual complexity contrast。
+
+对每个区域$r_i$，其空间加权global contrast定义为：
+\begin{align}
+U(r_i) = \sum_{j\ne i}w_{ij} \cdot D_r(r_i, r_j) \cdot \phi_j\\
+w_{ij} = \frac{1}{Z_i}\cdot exp[-\sigma_s^2 \cdot D_s(r_i, r_j)]
+\end{align}
+其中，$\phi_j$是指区域$r_j$内的像素个数，即区域$r_j$的大小。$D_s(r_i, r_j)$表示区域$r_i$和$r_j$之间的空间距离。$\phi_s$则用来控制空间加权$w_{ij}$的影响程度，$\phi_s$越大，对$U(r_i)$的影响越小。$\frac{1}{Z_i}$是归一化因子，保证$\sum_{j \ne i}w_{ij} = 1$。
+
+
 \section{Priors}
 
 \subsection{Backgroundness}
 
 计算超像素区域与图像四个边界上的超像素的相似度。
 
-论文Learning optimal seeds for diffusion-based salient object detection中用到
+论文~\cite{lu2014learning}中用到
 
 \subsection{Center Prior或Location Prior}
 
-SDSP~\cite{zhang2013sdsp}中用到，并且定义如下：
+SDSP~\cite{zhang2013sdsp}中将Location Prior描述为：处于图像偏中央位置的物体更能吸引人的注意。这里Location Prior是按像素级计算的，定义如下：
 \begin{align}
-S_D(x) = exp(-\frac{||x-c||_2^2}{\sigma_D^2})
+S_D(x) = exp\left(-\frac{||x-c||_2^2}{\sigma_D^2}\right)
 \end{align}
+效果如图~\ref{fig: SDSPCenterPrior}。
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.25\textwidth]{SDSPCenterPrior.png}
+\caption{SDSP: Center Prior}
+\label{fig: SDSPCenterPrior}
+\end{figure} 
 
 \subsection{Color Prior}
 
+SDSP~\cite{zhang2013sdsp}中将Color Prior描述为：暖色(例如红色和黄色)比冷色(例如绿色和蓝色)更能吸引人类视觉系统的注意。先将图像由RGB颜色空间转换到$CIEL*a*b$空间，$\{ f_L(x)\}$, $\{ f_a(x)\}$, $\{ f_b(x)\}$分别代表$L*$通道，$a*$通道和$b*$通道。这里Color Prior是按像素级计算的，定义如下：
+\begin{align}
+S_c(x) = 1-exp\left(-\frac{f_{an}^2(x)+f_{bn}^2(x)}{\sigma_c^2}\right)
+\end{align}
+其中
+\begin{align}
+f_{an}(x)=\frac{f_a(x)-mina}{maxa-mina}, f_{bn}(x) = \frac{f_b(x)-minb}{maxb-minb}
+\end{align}
+效果如图~\ref{fig: SDSPColorPrior}。
+\begin{figure}
+  \centering 
+  \subfigure[]{ 
+    \label{fig: SDSPColorPrior: a} %% label for first subfigure 
+    \includegraphics[width=0.25\textwidth]{example2.png}} 
+  \subfigure[]{ 
+    \label{fig: SDSPColorPrior: b} %% label for second subfigure 
+    \includegraphics[width=0.25\textwidth]{SDSPColorPrior.png}} 
+  \caption{SDSP: Color Prior}
+  \label{fig: SDSPColorPrior} %% label for entire figure 
+\end{figure}
 
 %
 % references
