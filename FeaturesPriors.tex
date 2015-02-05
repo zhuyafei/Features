@@ -184,7 +184,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 %\lhead{\color{black!50!green}2014年秋季学期}
-\chead{\color{black!50!green}图像特征}
+\chead{\color{black!50!green}Features\&Priors}
 %\rhead{\color{black!50!green}通信电子电路}
 \lfoot{\color{blue!50!green}朱亚菲}
 \cfoot{\color{blue!50!green}\href{http://vision.ouc.edu.cn/~zhenghaiyong}{CVBIOUC}}
@@ -198,7 +198,7 @@
 %%---------------------------------------------------------------------
 %%---------------------------------------------------------------------
 % \titlepage
-\title{\vspace{-2em}显著性检测领域之图像特征\vspace{-0.7em}}
+\title{\vspace{-2em}显著性检测领域之图像特征及priors\vspace{-0.7em}}
 \author{朱亚菲}
 \date{\vspace{-0.7em}2015年1月\vspace{-0.7em}}
 %%---------------------------------------------------------------------
@@ -483,12 +483,6 @@ w_{ij} = \frac{1}{Z_i}\cdot exp[-\sigma_s^2 \cdot D_s(r_i, r_j)]
 
 \section{Priors}
 
-\subsection{Backgroundness}
-
-计算超像素区域与图像四个边界上的超像素的相似度。
-
-论文~\cite{lu2014learning}中用到
-
 \subsection{Center Prior或Location Prior}
 
 SDSP~\cite{zhang2013sdsp}中将Location Prior描述为：处于图像偏中央位置的物体更能吸引人的注意。这里Location Prior是按像素级计算的，定义如下：
@@ -502,6 +496,50 @@ S_D(x) = exp\left(-\frac{||x-c||_2^2}{\sigma_D^2}\right)
 \caption{SDSP: Center Prior}
 \label{fig: SDSPCenterPrior}
 \end{figure} 
+
+\subsection{Backgroundness Prior}
+
+通常是基于伪背景的假设，即假设处于图像周围狭窄边界上的区域是背景区域。
+
+论文~\cite{lu2014learning}中用到
+
+论文~\cite{wei2012geodesic}中提出了关于background的两种prior，叫做boundary and connectivity priors。boundary prior来源于摄影构图的基本规则，大部分摄影师都不会将显著目标切断在视觉框架中，也就是说，位于图像边界上的通常是背景。这个prior比之前提出的center prior更通用一些，因为显著目标可能并不会正好位于图像正中央，例如三分构图法，但它们很少会处在图像边界上。connectivity prior是从图像中背景的外观特征得来的，背景区域通常较大并且是同质的。也就是说，背景中绝大多数图像块可以很容易地彼此连接起来。
+
+首先対一幅图像构造无向图$G = \{V, \varepsilon \}$，图中的节点由两部分(图像块$\{P_i\}$和伪背景节点$B$)构成，即$V = \{P_i\}\cup \{B\}$。边也包括两种类型，一种是internal edges，连接了所有相邻的图像块，另一种是boundary edges，连接了处于图像边界的块和背景节点，即$\varepsilon = \{(P_i, P_j)|$$P_i$与$P_j$相邻$\} \cup \{(P_i, B)|$$P_i$在图像边界上\}。
+
+图像块$P$上的geodesic saliency被定义为沿着从$P$到背景节点$B$的最短路径上的边的权值的累加和。
+\begin{align}
+saliency(P) = \min_{P_1=P, P_2, \ldots, P_n=B}\sum_{i=1}^{n-1}weight(P_i, P_{i+1}), s.t.(P_i, P_{i+1})\in \varepsilon
+\end{align}
+
+1、伪背景的节点是怎么找的？
+
+2、如何求internal edge weight？
+
+internal edge weight是相邻图像块之间的appearance distance，采用的是一种简单有效的weight clipping approach，图像块与块之间的appearance distance求的是两个块在LAB颜色空间上的颜色平均值的不同。对图像中的每一个块，算出它与所有neighbors的最小appearance distance，然后取这些distance的均值作为“insignificance” distance threshold，当某距离比这个阈值小时就说明它是不重要的，将它置为0。
+
+3、如何求boundary edge weight？
+
+boundary edge weight度量的是处于图像边界的图像块不是背景的可能性大小。当boundary prior是完全有效的时候，所有的boundary edge weight就都是0。但现实没有这么理想化，显著目标只要有哪怕一小部分落到了图像边界，也会产生不好的效果。这里可以通过用其他的显著性的方法来实现，已知图像边界上的块，计算每个块$P_i$的显著性作为the weight of boundary edge($P_i, B$)。
+
+论文~\cite{yang2013saliency}算法步骤如图~\ref{fig: MR1}，先对图像进行超像素分割，然后将分割后的图像映射为图，每个超像素为图中的节点。第一个阶段是将图像的每一条边界上(共4条)的节点看作是labelled background queries，依次算图中的每个节点与这些queries的相关性来得到4幅labelled maps，然后对其进行融合得到显著图。在第二阶段，对第一阶段得到的显著图二值化，然后将得到的labelled foreground节点看作是salient queries，最终每个节点的显著度就是通过计算其与foreground queries的相关性得到。
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.7\textwidth]{MR1.png}
+\caption{算法步骤}
+\label{fig: MR1}
+\end{figure}
+
+论文~\cite{jiang2013saliency}中也用到backgroundness prior，
+
+\subsection{Boundary connectivity prior}
+
+由于基于伪背景假设的显著目标检测方法在目标碰到图像边界时会失效，所以后来又提出了boundary connectivity prior，这种prior被描述为：显著目标与图像边缘的连接程度比背景与边缘的连接程度小。
+
+论文~\cite{zhu2014saliency}中将一个区域内的boundary connectivity score定义为它沿图像边缘的长度与整个区域面积的比值：
+\begin{align}
+BndCon(p) = \frac{Len_{bnd}(p)}{\sqrt{Area(p)}}
+\end{align}
 
 \subsection{Color Prior}
 
@@ -530,7 +568,7 @@ f_{an}(x)=\frac{f_a(x)-mina}{maxa-mina}, f_{bn}(x) = \frac{f_b(x)-minb}{maxb-min
 % references
 \bibliographystyle{plain}
 
-\bibliography{features} %参考文献
+\bibliography{FeaturesPriors} %参考文献
 
 
 \end{document}

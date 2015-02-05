@@ -1,2 +1,2 @@
-# Features
-对图像领域用到的features的简单总结
+# FeaturesPriors
+对显著性检测领域用到的features及priors的简单总结
