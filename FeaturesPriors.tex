@@ -274,7 +274,7 @@ HSV颜色模式是除了RGB颜色模式之外的另一种流行的颜色模式�
 
 \section{基于像素点的feature contrasts}
 
-\subsection{颜色特征}
+\subsection{颜色}
 
 \subsection{SIFT特征}
 
@@ -490,29 +490,6 @@ H(r_i) = \sum_{p=1}^{n_{c, i}}f(c_{p, i})\cdot log_2f(c_{p, i})
 wCtr(p) = \sum_{i=1}^{N}d_{app}(p, p_i)w_{spa}(p, p_i)w_i^{bg},
 \end{align}
 
-\section{Feature Contrasts的融合}
-
-目前来看，分为两种。
-
-1. 求出两个区域间关于多种关于visual cues的对比度之后，要先将这些对比度融合，例如可以相乘，求出最终的对比度公式。然后再对每个区域计算local或global contrast。
-
-论文~\cite{zhu2014tag}中，两个区域$r_i$、$r_j$间的最终的对比度定义如下：
-\begin{align}
-D_r(r_i, r_j) = D_c(r_i, r_j) \cdot exp[\sigma_e^2 \cdot D_e(r_i, r_j)]
-\end{align}
-其中$D_c(r_i, r_j)$是指color contrast，$D_c(r_i, r_j)$是指visual complexity contrast。
-
-对每个区域$r_i$，其空间加权global contrast定义为：
-\begin{align}
-U(r_i) = \sum_{j\ne i}w_{ij} \cdot D_r(r_i, r_j) \cdot \phi_j\\
-w_{ij} = \frac{1}{Z_i}\cdot exp[-\sigma_s^2 \cdot D_s(r_i, r_j)]
-\end{align}
-其中，$\phi_j$是指区域$r_j$内的像素个数，即区域$r_j$的大小。$D_s(r_i, r_j)$表示区域$r_i$和$r_j$之间的空间距离。$\phi_s$则用来控制空间加权$w_{ij}$的影响程度，$\phi_s$越大，对$U(r_i)$的影响越小。$\frac{1}{Z_i}$是归一化因子，保证$\sum_{j \ne i}w_{ij} = 1$。
-
-2. 对每个visual cue求出local或global contrast之后，再对这些对比度进行融合。
-
-例如论文~\cite{yan2013hierarchical}中，
-
 \section{Priors}
 
 \subsection{Center Prior或Location Prior}
@@ -618,9 +595,44 @@ O_r(\Lambda_i) = \frac{1}{|\Lambda_i|}\sum_{x \in \Lambda_i} O_p(x).
 
 论文~\cite{jiangpeng2013salient}中将focusness定义为焦点模糊程度。
 
+\section{Feature Contrasts/Priors的融合}
 
+\subsection{相乘}
 
+目前来看，分为两种。
 
+1. 求出两个区域间关于多种关于visual cues的对比度之后，要先将这些对比度融合，例如可以相乘，求出最终的对比度公式。然后再对每个区域计算local或global contrast。
+
+论文~\cite{zhu2014tag}中，两个区域$r_i$、$r_j$间的最终的对比度定义如下：
+\begin{align}
+D_r(r_i, r_j) = D_c(r_i, r_j) \cdot exp[\sigma_e^2 \cdot D_e(r_i, r_j)]
+\end{align}
+其中$D_c(r_i, r_j)$是指color contrast，$D_c(r_i, r_j)$是指visual complexity contrast。
+
+对每个区域$r_i$，其空间加权global contrast定义为：
+\begin{align}
+U(r_i) = \sum_{j\ne i}w_{ij} \cdot D_r(r_i, r_j) \cdot \phi_j\\
+w_{ij} = \frac{1}{Z_i}\cdot exp[-\sigma_s^2 \cdot D_s(r_i, r_j)]
+\end{align}
+其中，$\phi_j$是指区域$r_j$内的像素个数，即区域$r_j$的大小。$D_s(r_i, r_j)$表示区域$r_i$和$r_j$之间的空间距离。$\phi_s$则用来控制空间加权$w_{ij}$的影响程度，$\phi_s$越大，对$U(r_i)$的影响越小。$\frac{1}{Z_i}$是归一化因子，保证$\sum_{j \ne i}w_{ij} = 1$。
+
+2. 对每个visual cue求出local或global contrast之后，再对这些对比度进行融合。
+
+例如论文~\cite{yan2013hierarchical}中，
+
+\subsection{相加}
+
+\subsection{全局优化}
+
+论文~\cite{zhu2014saliency}中是通过最小二乘实现全局优化。其中的cost function如下：
+\begin{align}
+\sum_{i=1}^{N}w_i^{bg}s_i^2+\sum_{i=1}^{N}s_i^{fg}(s_i-1)^2+\sum_{i, j}w_{ij}(s_i-s_j)^2，
+\end{align}
+其中第一项是背景约束，当某区域的$w_i^{bg}$较大时，是背景的概率较大，方程的第一项占的比重较多，为使整个方程值最小，需使$s_i$近似为0，也就是使该区域的显著性近似为0。第二项是前景约束，当某区域的$w_i^{fg}$较大时，第二项占的比重较大，需使$s_i$近似为1。$w_i^{fg}$可以通过目前已有的一些显著性方法或它们的组合来计算。第三项是平滑约束，保证显著值的连续性，$w_{ij}$定义如下：
+\begin{align}
+w_{ij} = exp(-\frac{d_{app}^2(p_i, p_j)}{2\sigma_{clr}^2})+\mu
+\end{align}
+超像素$p_i$与$p_j$越相似，$d_{app}(p_i, p_j)$越小，$w_{ij} $越大，越需要$s_i$，$s_j$近似相等。
 %
 % references
 \bibliographystyle{plain}
