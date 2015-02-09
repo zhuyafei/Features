@@ -287,7 +287,7 @@ SIFT特征(Scale-invariant transform，尺度不变特征变换)由David Lowe在
 L(x, y, e) = G(x, y, e) * I(x, y)
 \end{align}
 
-其中$G(x, y, e$是尺度可变高斯函数，
+其中$G(x, y, e)$是尺度可变高斯函数，
 \begin{align}
  G(x,y,e) = \frac{1}{2*\pi *e^2} * exp[-\frac{x^2 + y^2}{2e^2}]
 \end{align}
@@ -490,6 +490,10 @@ H(r_i) = \sum_{p=1}^{n_{c, i}}f(c_{p, i})\cdot log_2f(c_{p, i})
 wCtr(p) = \sum_{i=1}^{N}d_{app}(p, p_i)w_{spa}(p, p_i)w_i^{bg},
 \end{align}
 
+\section{Hierarchical over-segmentation}
+
+方法TS~\cite{zhu2014tag}中用到，hierarchical over-segmentation是通过先对原图像进行超像素分割，再通过迭代将每一分割层再分割成更精细的子区域来实现。
+
 \section{Priors}
 
 \subsection{Center Prior或Location Prior}
@@ -506,13 +510,22 @@ S_D(x) = exp\left(-\frac{||x-c||_2^2}{\sigma_D^2}\right)
 \label{fig: SDSPCenterPrior}
 \end{figure} 
 
+论文~\cite{yang2013graph}中用到Convex-Hull-Based Center Prior，即首先估计显著目标的中心位置$(x_0, y_0)$，再计算每个超像素$i$的显著性：
+\begin{align}
+S_{ce}(i) = exp\left(-\frac{||x_i-x_0||^2}{2\sigma_x^2}-\frac{||y_i-y_0||^2}{2\sigma_y^2}\right)
+\end{align}
+
 \subsection{Backgroundness Prior}
 
 通常是基于伪背景的假设，即假设处于图像周围狭窄边界上的区域是背景区域。
 
-论文~\cite{lu2014learning}中用到
-
-论文~\cite{wei2012geodesic}中提出了关于background的两种prior，叫做boundary and connectivity priors。boundary prior来源于摄影构图的基本规则，大部分摄影师都不会将显著目标切断在视觉框架中，也就是说，位于图像边界上的通常是背景。这个prior比之前提出的center prior更通用一些，因为显著目标可能并不会正好位于图像正中央，例如三分构图法，但它们很少会处在图像边界上。connectivity prior是从图像中背景的外观特征得来的，背景区域通常较大并且是同质的。也就是说，背景中绝大多数图像块可以很容易地彼此连接起来。
+2012年，论文~\cite{wei2012geodesic}中提出了关于background的两种prior，叫做boundary and connectivity priors。boundary prior来源于摄影构图的基本规则，大部分摄影师都不会将显著目标切断在视觉框架中，也就是说，位于图像边界上的通常是背景。这个prior比之前提出的center prior更通用一些，因为显著目标可能并不会正好位于图像正中央，例如三分构图法，但它们很少会处在图像边界上。connectivity prior是从图像中背景的外观特征得来的，背景区域通常较大并且是同质的。也就是说，背景中绝大多数图像块可以很容易地彼此连接起来。如图~\ref{fig: GS}。
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.5\textwidth]{GS.png}
+\caption{Geodesic saliency图例}
+\label{fig: GS}
+\end{figure} 
 
 首先対一幅图像构造无向图$G = \{V, \varepsilon \}$，图中的节点由两部分(图像块$\{P_i\}$和伪背景节点$B$)构成，即$V = \{P_i\}\cup \{B\}$。边也包括两种类型，一种是internal edges，连接了所有相邻的图像块，另一种是boundary edges，连接了处于图像边界的块和背景节点，即$\varepsilon = \{(P_i, P_j)|$$P_i$与$P_j$相邻$\} \cup \{(P_i, B)|$$P_i$在图像边界上\}。
 
@@ -540,6 +553,8 @@ boundary edge weight度量的是处于图像边界的图像块不是背景的可
 \end{figure}
 
 论文~\cite{jiang2013saliency}中也用到backgroundness prior，
+
+论文~\cite{lu2014learning}中用到
 
 \subsection{Boundary connectivity prior}
 
@@ -591,6 +606,22 @@ O_r(\Lambda_i) = \frac{1}{|\Lambda_i|}\sum_{x \in \Lambda_i} O_p(x).
 \end{align}
 计算完一个区域内的objectness后，把这个值赋给该区域内的所有像素。这样就可以得到整幅图像I的objectness map，简称为$O(I)$。
 
+\subsection{Smoothness Prior}
+
+论文~\cite{yang2013graph}中用到，平滑约束通常是用在基于图的目标分割中，目的是使图像中相邻的像素拥有同样的label值。论文中先将图像分割成超像素，然后将其映射为图，每个超像素对应图中的节点，有共同的边界的超像素之间有一条边，边上的权值为$w_{ij} \in W$：
+\begin{align}
+w_{ij} = exp\left(-\frac{||c_i-c_j||}{2\sigma_w^2}\right)，
+\end{align}
+其中$c_i$和$c_j$是CIELab空间超像素区域内像素的颜色均值。可以看到关系矩阵$W$是一个稀疏矩阵。定义如下saliency cost function来表示这种smoothness prior：
+\begin{align}
+E(S) = \sum_i(S(i)-S_{in}(i))^2+\lambda\sum_{i,j}w_{ij}(S(i)-S(j))^2
+\end{align}
+$S(i)$和$S(i)$分别表示节点$i$和$j$的所要求的显著值，$S_{in}(i)$是节点$i$的初始显著值，$\lambda$是规范化系数。其中等式右边第一项是fitting constraint，表示一幅好的显著图与初始显著图之间不会变化太多。第二项是smoothness constraint，一幅好的显著图上相邻超像素的显著值不会相差太多。超像素上的最优显著值是通过最小化该cost function来计算。令该方程关于$S$的导数为0可得
+\begin{align}
+S^* = \mu (D-W+\mu I)^{-1}S_{in}
+\end{align}
+其中$D$是三角矩阵，并且有$d_{ii} = \sum_j (w_{ij})$，$\mu = 1/(2\lambda)$。
+
 \subsection{Focusness Prior}
 
 论文~\cite{jiangpeng2013salient}中将focusness定义为焦点模糊程度。
@@ -598,6 +629,8 @@ O_r(\Lambda_i) = \frac{1}{|\Lambda_i|}\sum_{x \in \Lambda_i} O_p(x).
 \section{Feature Contrasts/Priors的融合}
 
 \subsection{相乘}
+
+对相乘融合而言，要保证相乘的量取值在$[0, 1]$之间。
 
 目前来看，分为两种。
 
@@ -620,11 +653,27 @@ w_{ij} = \frac{1}{Z_i}\cdot exp[-\sigma_s^2 \cdot D_s(r_i, r_j)]
 
 例如论文~\cite{yan2013hierarchical}中，
 
+方法PBS~\cite{yang2013graph}中在求初始显著图时先计算了spatially weighted contrast
+\begin{align}
+S_{co}(i) = \sum_{j \ne i}||c_i-c_j|| \cdot exp\left(-\frac{||p_i-p_j||^2}{2\sigma_p^2}\right)
+\end{align}
+然后又计算了convex-hull-based center prior map，即首先估计显著目标的中心位置$(x_0, y_0)$，再计算每个超像素$i$的显著性：
+\begin{align}
+S_{ce}(i) = exp\left(-\frac{||x_i-x_0||^2}{2\sigma_x^2}-\frac{||y_i-y_0||^2}{2\sigma_y^2}\right)
+\end{align}
+最后将两者相乘得到初始显著图
+\begin{align}
+S_{in}(i) = S_{co}(i) \times S_{ce}(i)
+\end{align}
+
+
 \subsection{相加}
 
-\subsection{全局优化}
+\subsection{利用机器学习进行优化}
 
-论文~\cite{zhu2014saliency}中是通过最小二乘实现全局优化。其中的cost function如下：
+\subsubsection{最小二乘法}
+
+1、论文~\cite{zhu2014saliency}中是通过最小二乘实现全局优化。其中的cost function如下：
 \begin{align}
 \sum_{i=1}^{N}w_i^{bg}s_i^2+\sum_{i=1}^{N}s_i^{fg}(s_i-1)^2+\sum_{i, j}w_{ij}(s_i-s_j)^2，
 \end{align}
@@ -633,6 +682,20 @@ w_{ij} = \frac{1}{Z_i}\cdot exp[-\sigma_s^2 \cdot D_s(r_i, r_j)]
 w_{ij} = exp(-\frac{d_{app}^2(p_i, p_j)}{2\sigma_{clr}^2})+\mu
 \end{align}
 超像素$p_i$与$p_j$越相似，$d_{app}(p_i, p_j)$越小，$w_{ij} $越大，越需要$s_i$，$s_j$近似相等。
+
+2、方法PBS~\cite{yang2013graph}中求最终显著图时用到如下saliency cost function：
+\begin{align}
+E(S) = \sum_i(S(i)-S_{in}(i))^2+\lambda\sum_{i,j}w_{ij}(S(i)-S(j))^2
+\end{align}
+$S(i)$和$S(i)$分别表示节点$i$和$j$的所要求的显著值，$S_{in}(i)$是节点$i$的初始显著值，$\lambda$是规范化系数。其中等式右边第一项是fitting constraint，表示一幅好的显著图与初始显著图之间不会变化太多。第二项是smoothness constraint，一幅好的显著图上相邻超像素的显著值不会相差太多。超像素上的最优显著值是通过最小化该cost function来计算。
+
+\subsubsection{条件随机场}
+
+条件随机场(Conditional Random Fields, CRFs)最早由Lafferty等人~\cite{lafferty2001conditional}于2001年提出，其模型思想主要来源于最大熵模型。
+
+
+\subsubsection{马尔可夫随机场}
+
 %
 % references
 \bibliographystyle{plain}
