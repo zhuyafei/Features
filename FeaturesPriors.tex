@@ -214,7 +214,7 @@
 
 人类视觉系统对复杂场景具有强适应性，神经生理和心理学研究表明人眼面临复杂场景时，会迅速将注意力集中在少数重要区域，并利用有限的处理能力对其优先处理。图像显著性检测的目的是在图像中快速有效地找到重要并且信息量大的区域~\cite{li2013contextual}。目前在图像重定向、图像分类、图像分割等领域都有广泛的应用。
 
-目前大多数显著性检测方法都是基于自底向上的计算框架。归纳起来通常分为三步：1. 特征提取，提取多种视觉特征，例如亮度、颜色、纹理等。2. 求像素或区域间的对比度。3. 求显著性
+目前大多数显著性检测方法都是基于自底向上的计算框架。归纳起来通常分为三步：1. 特征提取，提取多种视觉特征，例如亮度、颜色、纹理等。2. 求像素或区域间的对比度。3. 求显著图
 
 \subsection{features}
 
@@ -240,21 +240,27 @@
 
 颜色空间按照基本结构可以分两大类：基色颜色空间和色、亮分离颜色空间。前者的典型是RGB，还包括CMY、CMYK、CIE XYZ等；后者包括YCC/YUV、Lab，以及一批“色相类颜色空间”。CIE XYZ是定义一切颜色空间的基准，很奇妙的是，它即属于基色颜色空间，也属于色、亮分离颜色空间，是贯穿两者的枢纽。色、亮分离颜色空间中的子类型”色相类颜色空间“，是把颜色分成一个表亮属性和两个表色属性，其中有一个表色属性是色相，而色相以外的两个属性可以选用不同的变量来定义，色相的概念不变，因此就构成一族共同使用色相属性，另加表亮属性和表色属性各一个组成的颜色空间，它们是颜色空间中的一个家族，暂且统称为HSB颜色空间。
 
-1）RGB颜色模型
+\subsubsection{RGB颜色空间}
 
 RGB颜色空间是常用的表示彩色图像的一种颜色空间，它是以红、绿、蓝三种颜色为基础，亦称为“三原色”。所谓的“原色”是一种生物学概念，是根据人眼对光线感知的生理作用来定义的。每一种颜色按亮度进行分类，分成256个等级。不同比例的红、绿、蓝叠加，能产生丰富的颜色。例如，等比例的三原色进行相加可以产生白色，红色与绿色相加产生黄色。可见，RGB空间属于“叠加型”原色系统，因此把RGB颜色空间作为最基础的颜色空间，通过对RGB的非线性或线性变换可以获得其它的颜色空间。
 
 RGB颜色空间最常用的用途就是显示器系统，彩色阴极射线管、彩色光栅图形的显示器都使用R、G、B数值来驱动R、G、B电子枪发射电子，并分别激发荧光屏上的R、G、B三种颜色的荧光粉发出不同亮度的光线，并通过相加混合产生各种颜色；扫描仪也是通过吸收原稿经反射或透射而发送来的光线中的R、G、B成分，并用它来表示原稿的颜色。RGB色彩空间称为与设备相关的色彩空间，因为不同的扫描仪扫描同一幅图像，会得到不同色彩的图像数据；不同型号的显示器显示同一幅图像，也会有不同的色彩显示结果。
 
-2）YUV颜色空间
+\subsubsection{YUV颜色空间}
 
 在现代彩色电视系统中，通常采用三管彩色摄像机或彩色CCD(点耦合器件)摄像机，它把摄得的彩色图像信号经分色分别放大校正得到RGB，再经过矩阵变换电路得到亮度信号Y和两个色差信号$R-Y$、$B-Y$，最后发送端将亮度和色差三个信号分别进行编码，用同一信道发送出去。这就是我们常用的YUV色彩空间。采用YUV色彩空间的重要性是它的亮度信号Y和色度信号$U$、$V$是分离的。如果只有Y信号分量而没有$U$、$V$分量，那么这样表示的图就是黑白灰度图。彩色电视采用YUV空间正是为了用亮度信号Y解决彩色电视机与黑白电视机的兼容问题，使黑白电视机也能接收彩色信号。根据美国国家电视制式委员会，NTSC制式的标准，当白光的 亮度用Y来表示时，它和红、绿、蓝三色光的关系可用如下式的方程描述：$Y=0.3R+0.59G+0.11B$，这就是常用的亮度公式。色差$U$、$V$是由$B－Y$、$R－Y$按不同比例压缩而成的。如果要由YUV空间转化成RGB空间，只要进行 相反的逆运算即可。
 
-3）CIE XYZ颜色空间
+\subsubsection{CIEXYZ颜色空间}
 
 国际照明委员会(CIE)在进行了大量正常人视觉测量和统计的基础上，与1931年建立了“标准色度观察者”，从而奠定了现代CIE标准色度学的定量基础。在色彩管理中，选择与设备无关的颜色空间是十分重要的，与设备无关的颜色空间由国际照明委员会(CIE)制定，包括CIEXYZ和CIELAB两个标准。它们包含了人眼所能辨别的全部颜色。
 
-4）CIELAB颜色空间
+\subsubsection{CIELUV颜色空间}
+
+论文~\cite{ma2003contrast}中用到。
+
+LUV色彩空间全称CIE 1976(L*,u*,v*)(也作CIELUV)色彩空间，L*表示物体亮度，u*和v*是色度。于1976年由国际照明委员会(International commission on Illumination)提出，由CIE XYZ空间经简单变换得到，具视觉统一性。类似的色彩空间有CIELAB。对于一般的图像，u*和v*的取值范围为-100到+100，亮度为0到100。
+
+\subsubsection{CIELAB颜色空间}
 
 Lab模式是由国际照明委员会(CIE)于1976年公布的一种色彩模式。它既不依赖光线，也不依赖于颜料，是CIE组织确定的一个理论上包括了人眼可以看见的所有色彩的色彩模式。CIELab颜色模型基于人对颜色的感觉，是一种接近人类视觉的颜色系统。Lab中的数值描述正常视力的人能够看到的所有颜色。因为Lab描述的是颜色的显示方式，而不是设备(如显示器、桌面打印机或数码相机)生成颜色所需的特定色料的数量，所以Lab被视为与设备无关的颜色模型。CIELab颜色空间是CIE XYZ颜色空间的一种数学变换的结果。
 
@@ -269,7 +275,7 @@ CIELAB系统使用的坐标叫做对色坐标(opponent color coordinate)，使�
 matlab中由RGB空间转换到Lab空间的函数如下：
 \lstinputlisting{rgb2lab.m} %用的CB方法中的
 
-5）HSV颜色模型
+\subsubsection{HSV颜色模型}
 
 HSV(Hue, Saturation, Value)是根据颜色的直观特性由A. R. Smith在1978年创建的一种颜色空间，也称六角椎体模型(Hexcone Model)。
 
@@ -295,7 +301,40 @@ matlab自带的rgb2hsv函数如下：
 
 \section{基于像素点的feature contrasts}
 
+\subsection{亮度}
+
+Itti1998模型~\cite{itti1998model}中用到。亮度信息是最基本的视觉信息，它直接由视网膜的视杆细胞产生,是最基本的视觉信息，视觉系统中的其他信息很多也是由亮度而来。而从计算的角度考虑，亮度特征也足够用于多数图像处理任务，比如分割、识别，同时计算量远小于彩色特征。一些特殊成像方法得到的图像没有颜色信息，直接利用获取的亮度信息。
+设r,g,b为输入图像的红色、绿色、蓝色通道，则Itti原始模型中亮度特征可以简单的计算出来:
+\begin{align}
+I = \frac{r+g+b}{3}
+\end{align}
+
 \subsection{颜色}
+
+Itti1998模型~\cite{itti1998model}中用到。颜色信息由视网膜的三种视锥细胞分别产生，而在初级视觉皮层中的颜色柱进行重新组合。颜色柱中的神经细胞对颜色的选择呈现双拮抗性质，即一种颜色使得细胞产生兴奋，而另一种颜色使得能够抑制该细胞的兴奋。在人类视觉皮层中存在四种拮抗颜色对，分别是红-绿、绿-红、蓝-黄、黄-蓝。
+
+首先为了去除颜色与亮度之间的耦合关系,用之前计算的亮度值对进行规一化处理。又因为视锥细胞只能在明亮的光线下感受颜色，所以只对亮度大于 图像中最大亮度10\%的区域进行规一化，而其他区域的均置为0。
+数字图像一般只有红、绿、蓝三个颜色通道，为了得到黄色通道，Itti根据归一化后的,使用下面的公式计算广义上的红、绿、蓝、黄四个通道:
+\begin{align}
+R = r-\frac{g+b}{2}\\
+G = r-\frac{r+b}{2}\\
+B = r-\frac{r+g}{2}
+\end{align}
+接下来利用这四个通道计算红-绿、蓝-黄颜色对。Itti模型巧妙地利用绝对值，表示了两个相反的颜色对中兴奋的那一种。因此红-绿与绿-红颜色对可以用一个公式表示:
+\begin{align}
+RG = |R-G|\\
+BY = |B-Y|
+\end{align}
+
+\subsection{方向}
+
+Itti1998模型~\cite{itti1998model}中用到。初级视觉皮层细胞对特定方向的刺激有强烈反应。Dennis Gabor经过研究发现，二维 Gabor 滤波器非常适合表示这种反应。二维 Gabor滤波器是一种用于检测边缘的线性滤波器，由高斯核函数与一个余弦函数调制得到:
+\begin{align}
+g(x, y; \lambda, \theta, \psi, \delta, \gamma) = exp\left(-\frac{x'^2+\gamma^2y'^2}{2\delta^2}\right)sin(\frac{2\pi x'}{\lambda}+\psi)
+\end{align}
+其中$x'=xcos\theta+ysin\theta$，$y'=-xsin\theta+ycos\theta$。公式中$\lambda$表示余弦函数的波长，$\theta$表示Gabor滤波器的方向，$\psi$表示相位，$\gamma$表示空间长宽比，$\delta$表示高斯包络的标准差。
+
+由于初级视觉皮层中有几千万个细胞，无法用模型将它们全部表示出来，Itti对这种生理结构进行了适当的简化。通过比较生理实验结果与模型的结果，固定次要变量，设置$ λ = 7$，$\psi= 0$，$\gamma = 1$，$\delta = 2.333$。而主要的变量是$\theta$，对 应着 Gabor滤波器的方向,Itti将连续的方向离散化,选择了4个最有代表性 的方向：$0^{\circ}$，$45^{\circ}$，$90^{\circ}$，$135^{\circ}$，这样就构造出4个Gabor滤波器，分别对输入图像滤波，得到 4 个方向特征图，记作$O(\theta)$，其中$\theta=0^{\circ}$，$45^{\circ}$，$90^{\circ}$，$135^{\circ}$。
 
 \subsection{SIFT特征}
 
@@ -326,9 +365,21 @@ SIFT特征一般用于匹配，在eye fixation prediction中有用到，而在�
 
 这里的feature contrasts是指由某种visual cue(比如颜色、纹理、位置等)对图像中两个区域$r_i$、$r_j$求出的区域间对比度。
 
+基于区域的显著性检测方法一般会先对图像进行超像素分割，然后提取超像素区域内的特征，再根据特征计算区域间的对比度，然后通过一定的机制求出最终的显著图。
+
+疑问：用到超像素分割，一定会将其映射为图吗？为什么要将超像素分割结果映射为图(即每个超像素被看成是图中的节点，节点之间的边的权重为两个超像素区域的相似程度)？
+
+应该是要用到图论中的一些概念(比如最短路径等)时会将其映射为图。
+
+经统计，PBS~\cite{yang2013graph}、RBD~\cite{zhu2014saliency}、OptSeedProp~\cite{lu2014learning}、MR~\cite{yang2013saliency}、论文~\cite{mairon2014closer}、PDE~\cite{liu2014adaptive}、论文~\cite{yan2013hierarchical}中都涉及图的概念。
+
+HDCT~\cite{kim2014salient}中只将图像分割成超像素，没有涉及图的概念。(没有统计完)
+
 \subsection{颜色}
 
 \subsubsection{Color Contrast}
+
+区域间的颜色对比度一般用两个超像素区域内颜色均值向量的距离来计算，不同方法中会乘上不同的权重(例如区域面积、区域间的距离等)。
 
 论文~\cite{yan2013hierarchical}中用到，公式如下：
 \begin{align}
@@ -380,6 +431,21 @@ DRFI方法中关于图像RGB空间的颜色直方图代码如下：
 
 对每个超像素区域，可以知道其中像素点的坐标值，能求出其对应到矩阵$Q$中的值，有多少个不同值就代表该区域内有多少种不同的颜色，然后算该区域在$1-16^3$之间的颜色占的像素个数，没有的记为0。对每个区域都能算出这样一个$16^3$维的向量，然后求区域之间的直方图的对比度，也就是求这样两个向量之间的距离。
 
+PISA~\cite{shi2013pisa}中没有将图像先分割成超像素，求超像素区域间的对比度，但也不是逐像素地计算color contrast。对每个像素点$p$，采用CLMF方法~\cite{lu2012cross}构造一个shape-adaptive observation region $\Omega_p$(如图~\ref{fig: PISA示例})，然后用该区域内的所有像素点$q \in \Omega_p$计算颜色直方图$h^c(p)$。这里用到的是Lab颜色空间，对每个颜色通道量化至12 bins，得到的像素点$p$上的颜色直方图$\mathbf{h}^c(p)$则是一个36维的描述子，如图~\ref{fig: PISA示例}。
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=0.6\textwidth]{PISA示例}
+\caption{PISA示例}
+\label{fig: PISA示例}
+\end{figure} 
+
+接着，用k-均值方法将拥有相似颜色直方图的像素聚类到一起。对整幅图像$I$，其颜色特征空间被量化为$K_c$个聚类$\{\Phi_1,\ldots,\Phi_{K_c}\}$。像素上的rarity或contrast计算就可以用聚类间的rarity来近似。假设像素点$p$属于聚类$\Phi_i$，则该点的颜色对比度定义如下：
+\begin{align}
+U^c(p) = U^c(\mathbf{h}^c(p)) = \sum_{j=1}^{K_c }w_j||\mathbf{h}^c(\Phi_i), \mathbf{h}^c(\Phi_j)||
+\end{align}
+其中$w_j$表示属于聚类$\Phi_j$的像素个数，$\mathbf{h}^c(\Phi_i)$表示聚类$\Phi_i$内的颜色直方图的均值。
+
 \subsection{纹理特征}
 
 图像纹理一直到现在都没有一个一致的、公认的定义，它在图像中是一个重要但是又不太容易描述出来的特征。纹理是人们将人类的视觉与触觉联系起来，进而形成一个视觉信息，它起源于人类对事物的触感。
@@ -395,7 +461,7 @@ LBP有很多变种，或说改进。原始的LBP记录像素点与其周围像�
 \label{fig: LBP}
 \end{figure} 
 
-如图~\ref{fig: LBP特征}
+实验效果如图~\ref{fig: LBP特征}。
 
 \begin{figure}
   \centering 
@@ -420,21 +486,13 @@ H_i = \frac{1}{w(R_i)}\sum_{x_i \in R_i} exp\{-\lambda||x_i-x_c||^2\}
 
 其中$(x_0, x_1 \ldots)$是区域$R_i$中的像素坐标集，$x_c$是图像中心的坐标，$w(R_i)$计算了区域$R_i$内的像素个数。由$H_i$的公式可看到，距离图像中心越近的区域拥有越大的权值。
 
-HDCT~\cite{kim2014salient}中用到，
+\subsection{奇异值特征}
 
-\subsection{形状特征}
+1、HDCT~\cite{kim2014salient}中用到。奇异值特征(Singular Value Feature，SVF)~\cite{su2011blurred}被用来从测试图像中检测模糊区域，通常一幅图像中的模糊区域是背景的可能性较大。
 
-\subsubsection{区域面积}
+\subsection{HOG特征}
 
-该区域包含的超像素的个数
-
-\subsubsection{奇异值特征}
-
-奇异值特征(Singular Value Feature，SVF)~\cite{su2011blurred}被用来从测试图像中检测模糊区域，通常一幅图像中的模糊区域是背景的可能性较大。
-
-\subsubsection{HOG特征}
-
-HOG(Histogram of Oriented Gradients，方向梯度直方图)特征最早是由法国国家计算机技术和控制研究所(INRIA)的Navneet Dalal和Bill Triggs在2005年发表在CVPR上的论文~\cite{dalal2005histograms}中提出的。
+HDCT~\cite{kim2014salient}中用到。HOG(Histogram of Oriented Gradients，方向梯度直方图)特征最早是由法国国家计算机技术和控制研究所(INRIA)的Navneet Dalal和Bill Triggs在2005年发表在CVPR上的论文~\cite{dalal2005histograms}中提出的。
 
 Dalal提出的HOG特征提取的过程如图~\ref{fig: HOG}，进一步表述如下：
 
@@ -445,14 +503,14 @@ Dalal提出的HOG特征提取的过程如图~\ref{fig: HOG}，进一步表述如
 \label{fig: HOG}
 \end{figure} 
 
-1. 灰度化
+1）灰度化
 
-2. 采用Gamma校正法对输入图像进行颜色空间的标准化(归一化)；目的是调节图像的对比度，降低图像局部的阴影和光照变化所造成的影响，同时可以抑制噪音的干扰。Gamma压缩公式：
+2）采用Gamma校正法对输入图像进行颜色空间的标准化(归一化)；目的是调节图像的对比度，降低图像局部的阴影和光照变化所造成的影响，同时可以抑制噪音的干扰。Gamma压缩公式：
 \begin{align}
 I(x, y) = I(x, y)^{gamma}
 \end{align}
 
-3. 计算图像每个像素的梯度(包括大小和方向)，主要是为了捕获轮廓信息，同时进一步弱化光照的干扰。
+3）计算图像每个像素的梯度(包括大小和方向)，主要是为了捕获轮廓信息，同时进一步弱化光照的干扰。
 
 图像中像素点$(x, y)$的梯度为
 \begin{align}
@@ -468,9 +526,9 @@ G(x, y) & = \sqrt{G_x(x, y)^2 + G_y(x, y)^2}\\
 
 最常用的方法是：首先用$[-1, 0, 1]$梯度算子对原图像做卷积运算，得到$x$方向(水平方向，以向右为正方向)的梯度分量gradscalx，然后用$[1, 0, -1]^T$梯度算子对原图像做卷积运算，得到$y$方向(竖直方向，以向上为正方向)的梯度分量gradscaly。然后再用以上公式计算该像素点的梯度大小和方向。
 
-4. 将图像每$16*16$(取其它也可以)个像素分到一个cell中，对于$256*256$的图像来说，就分成了$16*16$个cell了。
+4）将图像每$16*16$(取其它也可以)个像素分到一个cell中，对于$256*256$的图像来说，就分成了$16*16$个cell了。
 
-5. 对于每个cell求其梯度方向直方图，通常取$bin = 9$(取其它也可以)个方向(特征)，也就是每$360/9 = 40$度分到一个方向，形成每个cell的descriptor。如图~\ref{fig: 方向梯度}，当某像素的梯度方向是20-40度，然后它的梯度大小是$|grad|$，那么直方图第2
+5）对于每个cell求其梯度方向直方图，通常取$bin = 9$(取其它也可以)个方向(特征)，也就是每$360/9 = 40$度分到一个方向，形成每个cell的descriptor。如图~\ref{fig: 方向梯度}，当某像素的梯度方向是20-40度，然后它的梯度大小是$|grad|$，那么直方图第2
 个bin的计数就要加上$|grad|$。
 
 \begin{figure}[!ht]
@@ -480,9 +538,9 @@ G(x, y) & = \sqrt{G_x(x, y)^2 + G_y(x, y)^2}\\
 \label{fig: 方向梯度}
 \end{figure} 
 
-6. 由于局部光照的变化以及前景-背景对比度的变化，使得梯度强度的变化范围非常大。这就需要对梯度强度做归一化。归一化能够进一步地对光照、阴影和边缘进行压缩。为此可以将每$2*2$(取其它也可以)个cell合成一个大的、空间上连通的block，所以这里就有$(16-1)*(16-1) = 225$个block。一个block内所有cell的特征向量串联起来便得到该block的HOG特征。这些block是互有重叠的，这就意味着：每一个cell的特征会以不同的结果多次出现在最后的特征向量中。
+6）由于局部光照的变化以及前景-背景对比度的变化，使得梯度强度的变化范围非常大。这就需要对梯度强度做归一化。归一化能够进一步地对光照、阴影和边缘进行压缩。为此可以将每$2*2$(取其它也可以)个cell合成一个大的、空间上连通的block，所以这里就有$(16-1)*(16-1) = 225$个block。一个block内所有cell的特征向量串联起来便得到该block的HOG特征。这些block是互有重叠的，这就意味着：每一个cell的特征会以不同的结果多次出现在最后的特征向量中。
 
-7. 所以每个block中都有$2*2*9$个特征，一共有225个block，所以总的特征有$225*36$个。
+7）所以每个block中都有$2*2*9$个特征，一共有225个block，所以总的特征有$225*36$个。
 
 遇到的疑问：
 
@@ -491,6 +549,14 @@ G(x, y) & = \sqrt{G_x(x, y)^2 + G_y(x, y)^2}\\
 2）一定要将彩色图像先转化为灰度图像才能提取HOG特征吗？
 
 HDCT~\cite{kim2014salient}方法中用到HOG特征~\cite{felzenszwalb2010object}，采用的是VLFeat官网上的代码。论文中首先也是对图像进行超像素分割，然后求每个超像素区域内像素点坐标的平均值$(x_i, y_i)$，$i$代表第$i$个超像素区域，求该区域的HOG特征就是以该坐标点为中心的$17*17$的网格作为输入图像(只取该网格内图像r通道的值)，17作为cellSize，然后对每个超像素区域得到一个31维的HOG特征向量。
+
+2、PISA~\cite{shi2013pisa}中用到Structure-Based Contrast。这种结构描述子是对像素点$p$周围的矩形区域$W_p$内的梯度分布用直方图$h^g(p)$来建模。$h^g(p)$计算了包含梯度方向分量和幅值分量的向量出现的频率。论文中将每个分量量化为8个bins，并且称得到的特征空间为OM空间(16维)。$W_p$窗口被固定为$9 \times 9$，最终求出的描述子被称为OM结构描述子。
+
+计算完每个像素上的结构描述子后，用k-均值方法将OM特征空间分成$K_g$个聚类$\{\varphi_1,\ldots,\varphi_{K_g}\}$。计算像素点$p$上的结构对比度等价于计算$p$所属聚类$\varphi_i$上的对比度
+\begin{align}
+U^g(p) = U^g(\textbf{h}^g(p)) = \sum_{j=1}^{K_g} w_j||\textbf{h}^g(\varphi_i), \textbf{h}^g(\varphi_j)||
+\end{align}
+$w_j$是聚类$\varphi_j$中像素的个数，$\textbf{h}^g(\varphi_i)$是聚类$\varphi_i$中的OM直方图的均值。
 
 \subsection{Visual Complexity Contrast}
 
@@ -506,7 +572,7 @@ H(r_i) = \sum_{p=1}^{n_{c, i}}f(c_{p, i})\cdot log_2f(c_{p, i})
 
 \subsection{Background Weighted Contrast}
 
-论文~\cite{zhu2014saliency}中用到，其中将background weighted contrast定义为
+RBD~\cite{zhu2014saliency}中用到，其中将background weighted contrast定义为
 \begin{align}
 wCtr(p) = \sum_{i=1}^{N}d_{app}(p, p_i)w_{spa}(p, p_i)w_i^{bg},
 \end{align}
@@ -514,6 +580,8 @@ wCtr(p) = \sum_{i=1}^{N}d_{app}(p, p_i)w_{spa}(p, p_i)w_i^{bg},
 \section{Hierarchical over-segmentation}
 
 方法TS~\cite{zhu2014tag}中用到，hierarchical over-segmentation是通过先对原图像进行超像素分割，再通过迭代将每一分割层再分割成更精细的子区域来实现。
+
+论文~\cite{yan2013hierarchical}中对原图像先提取3个layers，即对原图像($400 \times 300$)用watershed-like方法~\cite{gonzalez2009digital}进行初始的过分割，对每个分割区域计算一个scale值，然后对所有区域的scale值按从小到大排序，如果一个区域的scale值小于3，就将它和最近的区域合并(通过判断两个区域内CIELUV颜色均值的距离)，然后更新它的scale，并更新合并区域的颜色均值，等对所有区域都处理后，得到的结果就是$L^1$层。$L^2$层是通过对$L^1$层采取同样的步骤，只不过用一个更大的阈值17。$L^3$层也是如此，阈值取33。
 
 \section{Priors}
 
@@ -531,7 +599,7 @@ S_D(x) = exp\left(-\frac{||x-c||_2^2}{\sigma_D^2}\right)
 \label{fig: SDSPCenterPrior}
 \end{figure} 
 
-论文~\cite{yang2013graph}中用到Convex-Hull-Based Center Prior，即首先估计显著目标的中心位置$(x_0, y_0)$，再计算每个超像素$i$的显著性：
+PBS~\cite{yang2013graph}中用到Convex-Hull-Based Center Prior，即首先估计显著目标的中心位置$(x_0, y_0)$，再计算每个超像素$i$的显著性：
 \begin{align}
 S_{ce}(i) = exp\left(-\frac{||x_i-x_0||^2}{2\sigma_x^2}-\frac{||y_i-y_0||^2}{2\sigma_y^2}\right)
 \end{align}
@@ -540,7 +608,7 @@ S_{ce}(i) = exp\left(-\frac{||x_i-x_0||^2}{2\sigma_x^2}-\frac{||y_i-y_0||^2}{2\s
 
 通常是基于伪背景的假设，即假设处于图像周围狭窄边界上的区域是背景区域。
 
-2012年，论文~\cite{wei2012geodesic}中提出了关于background的两种prior，叫做boundary and connectivity priors。boundary prior来源于摄影构图的基本规则，大部分摄影师都不会将显著目标切断在视觉框架中，也就是说，位于图像边界上的通常是背景。这个prior比之前提出的center prior更通用一些，因为显著目标可能并不会正好位于图像正中央，例如三分构图法，但它们很少会处在图像边界上。connectivity prior是从图像中背景的外观特征得来的，背景区域通常较大并且是同质的。也就是说，背景中绝大多数图像块可以很容易地彼此连接起来。如图~\ref{fig: GS}。
+1、2012年，论文~\cite{wei2012geodesic}中提出了关于background的两种prior，叫做boundary and connectivity priors。boundary prior来源于摄影构图的基本规则，大部分摄影师都不会将显著目标切断在视觉框架中，也就是说，位于图像边界上的通常是背景。这个prior比之前提出的center prior更通用一些，因为显著目标可能并不会正好位于图像正中央，例如三分构图法，但它们很少会处在图像边界上。connectivity prior是从图像中背景的外观特征得来的，背景区域通常较大并且是同质的。也就是说，背景中绝大多数图像块可以很容易地彼此连接起来。如图~\ref{fig: GS}。
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=0.5\textwidth]{GS.png}
@@ -555,17 +623,17 @@ S_{ce}(i) = exp\left(-\frac{||x_i-x_0||^2}{2\sigma_x^2}-\frac{||y_i-y_0||^2}{2\s
 saliency(P) = \min_{P_1=P, P_2, \ldots, P_n=B}\sum_{i=1}^{n-1}weight(P_i, P_{i+1}), s.t.(P_i, P_{i+1})\in \varepsilon
 \end{align}
 
-1、伪背景的节点是怎么找的？
+1）伪背景的节点是怎么找的？
 
-2、如何求internal edge weight？
+2）如何求internal edge weight？
 
 internal edge weight是相邻图像块之间的appearance distance，采用的是一种简单有效的weight clipping approach，图像块与块之间的appearance distance求的是两个块在LAB颜色空间上的颜色平均值的不同。对图像中的每一个块，算出它与所有neighbors的最小appearance distance，然后取这些distance的均值作为“insignificance” distance threshold，当某距离比这个阈值小时就说明它是不重要的，将它置为0。
 
-3、如何求boundary edge weight？
+3）如何求boundary edge weight？
 
 boundary edge weight度量的是处于图像边界的图像块不是背景的可能性大小。当boundary prior是完全有效的时候，所有的boundary edge weight就都是0。但现实没有这么理想化，显著目标只要有哪怕一小部分落到了图像边界，也会产生不好的效果。这里可以通过用其他的显著性的方法来实现，已知图像边界上的块，计算每个块$P_i$的显著性作为the weight of boundary edge($P_i, B$)。
 
-论文~\cite{yang2013saliency}算法步骤如图~\ref{fig: MR1}，先对图像进行超像素分割，然后将分割后的图像映射为图，每个超像素为图中的节点。第一个阶段是将图像的每一条边界上(共4条)的节点看作是labelled background queries，依次算图中的每个节点与这些queries的相关性来得到4幅labelled maps，然后对其进行融合得到显著图。在第二阶段，对第一阶段得到的显著图二值化，然后将得到的labelled foreground节点看作是salient queries，最终每个节点的显著度就是通过计算其与foreground queries的相关性得到。
+MR~\cite{yang2013saliency}算法步骤如图~\ref{fig: MR1}，先对图像进行超像素分割，然后将分割后的图像映射为图，每个超像素为图中的节点。第一个阶段是将图像的每一条边界上(共4条)的节点看作是labelled background queries，依次算图中的每个节点与这些queries的相关性来得到4幅labelled maps，然后对其进行融合得到显著图。在第二阶段，对第一阶段得到的显著图二值化，然后将得到的labelled foreground节点看作是salient queries，最终每个节点的显著度就是通过计算其与foreground queries的相关性得到。
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=0.7\textwidth]{MR1.png}
@@ -573,9 +641,9 @@ boundary edge weight度量的是处于图像边界的图像块不是背景的可
 \label{fig: MR1}
 \end{figure}
 
-论文~\cite{jiang2013saliency}中也用到backgroundness prior，
+2、论文~\cite{jiang2013saliency}中也用到backgroundness prior，即将图像四周边界看成是伪背景节点，将马尔可夫随机游走的性质与显著性检测联系起来。
 
-论文~\cite{lu2014learning}中用到
+3、OptSeedProp~\cite{lu2014learning}中用到
 
 \subsection{Boundary connectivity prior}
 
@@ -588,7 +656,7 @@ BndCon(p) = \frac{Len_{bnd}(p)}{\sqrt{Area(p)}}
 
 \subsection{Color Prior}
 
-SDSP~\cite{zhang2013sdsp}中将Color Prior描述为：暖色(例如红色和黄色)比冷色(例如绿色和蓝色)更能吸引人类视觉系统的注意。先将图像由RGB颜色空间转换到$CIEL*a*b$空间，$\{ f_L(x)\}$, $\{ f_a(x)\}$, $\{ f_b(x)\}$分别代表$L*$通道，$a*$通道和$b*$通道。这里Color Prior是按像素级计算的，定义如下：
+SDSP~\cite{zhang2013sdsp}中将Color Prior描述为：暖色(例如红色和黄色)比冷色(例如绿色和蓝色)更能吸引人类视觉系统的注意。先将图像由RGB颜色空间转换到$CIEL*a*b*$空间，$\{ f_L(x)\}$, $\{ f_a(x)\}$, $\{ f_b(x)\}$分别代表$L*$通道，$a*$通道和$b*$通道。这里Color Prior是按像素级计算的，定义如下：
 \begin{align}
 S_c(x) = 1-exp\left(-\frac{f_{an}^2(x)+f_{bn}^2(x)}{\sigma_c^2}\right)
 \end{align}
@@ -629,7 +697,7 @@ O_r(\Lambda_i) = \frac{1}{|\Lambda_i|}\sum_{x \in \Lambda_i} O_p(x).
 
 \subsection{Smoothness Prior}
 
-论文~\cite{yang2013graph}中用到，平滑约束通常是用在基于图的目标分割中，目的是使图像中相邻的像素拥有同样的label值。论文中先将图像分割成超像素，然后将其映射为图，每个超像素对应图中的节点，有共同的边界的超像素之间有一条边，边上的权值为$w_{ij} \in W$：
+PBS~\cite{yang2013graph}中用到，平滑约束通常是用在基于图的目标分割中，目的是使图像中相邻的像素拥有同样的label值。论文中先将图像分割成超像素，然后将其映射为图，每个超像素对应图中的节点，有共同的边界的超像素之间有一条边，边上的权值为$w_{ij} \in W$：
 \begin{align}
 w_{ij} = exp\left(-\frac{||c_i-c_j||}{2\sigma_w^2}\right)，
 \end{align}
@@ -672,7 +740,27 @@ w_{ij} = \frac{1}{Z_i}\cdot exp[-\sigma_s^2 \cdot D_s(r_i, r_j)]
 
 2. 对每个visual cue求出local或global contrast之后，再对这些对比度进行融合。
 
-例如论文~\cite{yan2013hierarchical}中，
+例如论文~\cite{yan2013hierarchical}中，作者用了两种cues：
+
+1）local contrast
+
+\begin{align}
+C_i = \sum_{j=1}^{n}w(R_i)\Phi(i, j)||c_i-c_j||_2
+\end{align}
+其中$c_i$和$c_j$分别表示区域$R_i$和$R_j$中的颜色，$w(R_j)$指$R_j$中像素的个数。$\Phi(i, j) = exp\{-D(R_i, R_j)/\sigma^2\}$，控制了区域$R_i$和$R_j$之间的空间距离，其中$D(R_i, R_j)$是区域$R_i$和$R_j$的中心的欧几里得距离的平方。
+
+2）location heuristic
+
+心理物理学方面的研究表示人类视觉注意偏好图像的中央区域，所以在通常情况下越靠近图像中央的像素越显著。
+\begin{align}
+H_i = \frac{1}{w(R_i)}\sum_{x_i \in R_i} exp\{-\lambda||x_i-x_c||^2\}
+\end{align}
+其中$\{x_0, x_1\ldots\}$是区域$R_i$中的像素坐标的集合，$x_c$是图像中心坐标。
+
+然后将$C_i$与$H_i$组合起来，得到
+\begin{align}
+\bar{s}_i = C_i \cdot H_i
+\end{align}
 
 方法PBS~\cite{yang2013graph}中在求初始显著图时先计算了spatially weighted contrast
 \begin{align}
@@ -692,7 +780,9 @@ S_{in}(i) = S_{co}(i) \times S_{ce}(i)
 
 \subsection{利用机器学习进行优化}
 
-\subsubsection{最小二乘法}
+\subsubsection{基于图的显著性检测方法}
+
+能量方程
 
 1、论文~\cite{zhu2014saliency}中是通过最小二乘实现全局优化。其中的cost function如下：
 \begin{align}
@@ -710,12 +800,16 @@ E(S) = \sum_i(S(i)-S_{in}(i))^2+\lambda\sum_{i,j}w_{ij}(S(i)-S(j))^2
 \end{align}
 $S(i)$和$S(i)$分别表示节点$i$和$j$的所要求的显著值，$S_{in}(i)$是节点$i$的初始显著值，$\lambda$是规范化系数。其中等式右边第一项是fitting constraint，表示一幅好的显著图与初始显著图之间不会变化太多。第二项是smoothness constraint，一幅好的显著图上相邻超像素的显著值不会相差太多。超像素上的最优显著值是通过最小化该cost function来计算。
 
-\subsubsection{条件随机场}
+条件随机场
 
 条件随机场(Conditional Random Fields, CRFs)最早由Lafferty等人~\cite{lafferty2001conditional}于2001年提出，其模型思想主要来源于最大熵模型。
 
 
-\subsubsection{马尔可夫随机场}
+马尔可夫随机场
+
+
+
+
 
 %
 % references
