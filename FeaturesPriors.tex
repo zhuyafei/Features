@@ -304,7 +304,8 @@ matlab自带的rgb2hsv函数如下：
 \subsection{亮度}
 
 Itti1998模型~\cite{itti1998model}中用到。亮度信息是最基本的视觉信息，它直接由视网膜的视杆细胞产生,是最基本的视觉信息，视觉系统中的其他信息很多也是由亮度而来。而从计算的角度考虑，亮度特征也足够用于多数图像处理任务，比如分割、识别，同时计算量远小于彩色特征。一些特殊成像方法得到的图像没有颜色信息，直接利用获取的亮度信息。
-设r,g,b为输入图像的红色、绿色、蓝色通道，则Itti原始模型中亮度特征可以简单的计算出来:
+
+设r,g,b为输入图像的红色、绿色、蓝色通道，则Itti原始模型中亮度特征可以简单的计算出来:
 \begin{align}
 I = \frac{r+g+b}{3}
 \end{align}
@@ -314,7 +315,8 @@ I = \frac{r+g+b}{3}
 Itti1998模型~\cite{itti1998model}中用到。颜色信息由视网膜的三种视锥细胞分别产生，而在初级视觉皮层中的颜色柱进行重新组合。颜色柱中的神经细胞对颜色的选择呈现双拮抗性质，即一种颜色使得细胞产生兴奋，而另一种颜色使得能够抑制该细胞的兴奋。在人类视觉皮层中存在四种拮抗颜色对，分别是红-绿、绿-红、蓝-黄、黄-蓝。
 
 首先为了去除颜色与亮度之间的耦合关系,用之前计算的亮度值对进行规一化处理。又因为视锥细胞只能在明亮的光线下感受颜色，所以只对亮度大于 图像中最大亮度10\%的区域进行规一化，而其他区域的均置为0。
-数字图像一般只有红、绿、蓝三个颜色通道，为了得到黄色通道，Itti根据归一化后的,使用下面的公式计算广义上的红、绿、蓝、黄四个通道:
+
+数字图像一般只有红、绿、蓝三个颜色通道，为了得到黄色通道，Itti根据归一化后的,使用下面的公式计算广义上的红、绿、蓝、黄四个通道:
 \begin{align}
 R = r-\frac{g+b}{2}\\
 G = r-\frac{r+b}{2}\\
@@ -806,6 +808,55 @@ $S(i)$和$S(i)$分别表示节点$i$和$j$的所要求的显著值，$S_{in}(i)$
 
 
 马尔可夫随机场
+
+\section{显著图的融合}
+
+1、论文~\cite{borji2012salient}中是将由图像$I$得到的$m$幅显著图$\{S_i||1 \le i \le m \}$通过如下方式融合得到最终的显著图：
+\begin{align}
+S(p) = P(y_p=1|S_1(p), S_2(p), \ldots, S_m(p))\propto \frac{1}{Z} \sum_{i=1}^{m} \zeta(S_i(p)), 
+\label{align: bayesian}
+\end{align}
+其中，$S(p)$表示图像$I$上像素点$p$处的显著值，$S_i(p)$表示显著图$S_i$上像素点$p$处的显著值，$y_p$是一个二值随机变量，当像素点$p$是显著的时值为1，否则值为0，$Z$是一个常数。
+
+由方程~(\ref{align: bayesian})可看出，当有一个方法产生的值很小时，在相乘时对整个结果影响较大，论文中对函数$\zeta$采用了三种改进形式，包括：
+\begin{align}
+\zeta_1(x) = x, \, \zeta_2(x) = exp(x), \,and \, \zeta_3(x) = \frac{-1}{log(x)}
+\end{align}
+当进行融合的方法的性能之间相差较大时，这种融合方法效果不是很好，主要原因是没有考虑到不同方法的效果差异而将它们同等对待。因此，性能较差的方法会在最终融合效果中占主导作用。
+
+2、论文~\cite{mai2013saliency}中采用了两种显著性融合方法。
+
+第一种(pixel-wise aggregation)：对图像中的每个像素点$p$，对应一个特征向量$\textbf{x}(p) = (S_1(p), S_2(p), \ldots, S_m(p))$，其中$S_i(p)$是像素点$p$在显著图$S_i$中的显著值。这里也定义了一个二值的随机变量$y_p$，表征某像素是否是显著的。如果像素点$p$是显著的值就为1，反之值为0。最终的显著值$S(P)$可看成是求取后验概率$P(y_p = 1|x(p))$，这个后验概率可以用logistic model~\cite{bishop2006pattern}来建模，
+\begin{align}
+P(y_p=1|x(p);\lambda)=\sigma(\sum_{i=1..m}\lambda_i S_i(p)+\lambda_{m+1})
+\end{align}
+其中模型参数$\lambda = \{\lambda_i|i=1..m+1\}$权衡了每幅显著图的贡献大小。这里$\sigma(.)$指的是如下的sigmoid函数
+\begin{align}
+\sigma(z) = \frac{1}{1+exp(-z)}
+\end{align}
+参数$\lambda$可以通过在训练集上用standard logistic regression technique学习到。
+
+第二种(CRF-based aggregation)：第一种方法分别计算各个像素上的显著值，而忽略了相邻像素间的关系。第二种方法有效解决了该问题，通过二值条件随机场~\cite{lafferty2001conditional}来估计显著值。利用条件随机场可以获取相邻像素间的相互关系。
+
+像第一种方法一样，将每个像素看成是一个节点，对应每个节点有一个特征向量$\textbf{x}(p) = (S_1(p), S_2(p), \ldots, S_m(p))$和一个二值随机标签$y_p$，1代表显著的，0代表非显著的。每个像素点上的显著性标签不仅依赖于它的特征向量，还依赖于相邻像素点上的标签。像素之间的相互关系也依赖于其上的特征。论文中使用网格形状的条件随机场来对标签和特征间的关系、相邻像素间标签的特征依赖关系进行建模。定义特征$X=\{x_p|p\in I\}$上的标签$Y=\{y_p|p \in I\}$的条件分布如下：
+\begin{align}
+P(Y|X;\theta) = \frac{1}{Z}exp(\sum_{p\in I}f_d(\textbf{x}_p, y_p)+\sum_{p \in I}\sum_{q\in N_p}f_s(\textbf{x}_p, \textbf{x}_q, y_p, y_q))
+\end{align}
+其中$p$是图像$I$中的一个像素，$\textbf{x}_p$表示其上的特征，$y_p$是它的显著性标签，$\theta$是条件随机场模型的参数。$f_d(\textbf{x}_p, y_p)$是定义特征和标签之间关系的特征函数。$f_s(\textbf{x}_p, \textbf{x}_q, y_p, y_q)$是另一个定义相邻像素$p$和$q$标签的特征依赖关系的特征函数。$N_p$是与$p$相关的像素集合。这里表示8邻域关系。$Z$是一个常数。
+
+特征函数$f_d(\textbf{x}_p, y_p)$的定义仅仅与输入的显著图$S_i$有关，
+\begin{align}
+f_d(\textbf{x}_p, y_p) = \sum_{i=1}^{m}\lambda_iS_i(p)y_p+\lambda_{m+1}y_p
+\end{align}
+其中$\{\lambda_i\}$是条件随机场模型的参数集，$S_i(p)$是显著图$S_i$中像素点$p$处的显著值。
+
+特征函数$f_s(\textbf{x}_p, \textbf{x}_q, y_p, y_q)$由两个分量组成，
+\begin{align}
+f_s(\textbf{x}_p, \textbf{x}_q, y_p, y_q) = f_e(\textbf{x}_p, \textbf{x}_q, y_p, y_q)+f_c(\textbf{x}_p, \textbf{x}_q, y_p, y_q)
+\end{align}
+第一个分量$f_e(\textbf{x}_p, \textbf{x}_q, y_p, y_q)$表示如果两个像素点用同一种显著性方法计算出的显著值不同，它们在融合结果中就可能会有不同的显著性标签。
+
+
 
 
 
