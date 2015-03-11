@@ -579,6 +579,38 @@ RBD~\cite{zhu2014saliency}中用到，其中将background weighted contrast定�
 wCtr(p) = \sum_{i=1}^{N}d_{app}(p, p_i)w_{spa}(p, p_i)w_i^{bg},
 \end{align}
 
+\section{Regional property descriptor}
+
+区域性质描述子中涉及的特征是从各区域独立提取的，区域之间相互没有关系，即不存在区域对比度。
+
+\subsection{几何特征}
+
+几何特征一般包括了大小和位置信息，用来描述显著物体和背景的空间分布。例如，显著物体通常位于靠近图像中心的位置，而背景通常分散在整幅图像上。
+
+1、区域内像素点$x$坐标/$y$坐标的平均值
+
+2、整个区域内像素的$x$坐标的$10\%$和$90\%$、$y$坐标的$10\%$和$90\%$
+
+ 3、区域周长
+ 
+ 4、由2所形成的bounding box的长宽比
+ 
+ 5、区域面积
+ 
+ 6、性质相近的邻域的面积
+ 
+ \subsection{外观特征}
+ 
+ 外观特征通常用来描述区域内的颜色和纹理分布，这样可以描述出显著物体或背景的共同特征，例如，背景通常具有均匀的颜色分布和相似的纹理图案。
+
+1、颜色分布
+
+区域内像素点上RGB值的方差(3维)、L*a*b*值的方差(3维)、HSV值的方差(3维)
+
+2、纹理分布
+
+LM滤波结果的方差
+
 \section{Hierarchical over-segmentation}
 
 方法TS~\cite{zhu2014tag}中用到，hierarchical over-segmentation是通过先对原图像进行超像素分割，再通过迭代将每一分割层再分割成更精细的子区域来实现。
@@ -855,9 +887,16 @@ f_d(\textbf{x}_p, y_p) = \sum_{i=1}^{m}\lambda_iS_i(p)y_p+\lambda_{m+1}y_p
 f_s(\textbf{x}_p, \textbf{x}_q, y_p, y_q) = f_e(\textbf{x}_p, \textbf{x}_q, y_p, y_q)+f_c(\textbf{x}_p, \textbf{x}_q, y_p, y_q)
 \end{align}
 第一个分量$f_e(\textbf{x}_p, \textbf{x}_q, y_p, y_q)$表示如果两个像素点用同一种显著性方法计算出的显著值不同，它们在融合结果中就可能会有不同的显著性标签。
+\begin{align}
+f_e(\textbf{x}_p, \textbf{x}_q, y_p, y_q) = \sum_{i=1}^{m}\alpha_i(\textbf{1}(y_p=1, y_q=0)-\textbf{1}(y_p=0, y_q=1))(S_i(p)-S_i(q))
+\end{align}
+其中，$\alpha$是这个特征函数中条件随机场模型的参数，$\textbf{1}(.)$是一个indicator函数。
 
-
-
+$f_c(\textbf{x}_p, \textbf{x}_q, y_p, y_q)$与论文~\cite{liu2011learning}中思路一样，表示有相似颜色的相邻像素应该有相似的显著性标签。
+\begin{align}
+f_c(\textbf{x}_p, \textbf{x}_q, y_p, y_q) = -\textbf{1}(y_p\ne y_q)exp(-\eta||I(p)-I(q)||)
+\end{align}
+其中，$||I(p)-I(q)||$是RGB颜色空间中像素$p$和$q$之间的差异。$\eta$
 
 
 
