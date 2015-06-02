@@ -238,7 +238,7 @@
 
 一般显著性检测方法中都会用到颜色特征。颜色通常用三个(也可以更多或更少)相对独立的属性来描述，三个独立变量综合作用，自然就构成一个空间坐标，这就是颜色空间。而颜色可以由不同的角度，用不同属性加以描述，就产生了不同的颜色空间。但被描述的颜色对象本身是客观的，不同颜色空间只是从不同的角度去衡量同一个对象。除了RGB颜色空间，另外两个常用的颜色空间就是CIELab和HSV颜色空间。
 
-颜色空间按照基本结构可以分两大类：基色颜色空间和色、亮分离颜色空间。前者的典型是RGB，还包括CMY、CMYK、CIE XYZ等；后者包括YCC/YUV、Lab，以及一批“色相类颜色空间”。CIE XYZ是定义一切颜色空间的基准，很奇妙的是，它即属于基色颜色空间，也属于色、亮分离颜色空间，是贯穿两者的枢纽。色、亮分离颜色空间中的子类型”色相类颜色空间“，是把颜色分成一个表亮属性和两个表色属性，其中有一个表色属性是色相，而色相以外的两个属性可以选用不同的变量来定义，色相的概念不变，因此就构成一族共同使用色相属性，另加表亮属性和表色属性各一个组成的颜色空间，它们是颜色空间中的一个家族，暂且统称为HSB颜色空间。
+颜色空间按照基本结构可以分两大类：基色颜色空间和色、亮分离颜色空间。前者的典型是RGB，还包括CMY、CMYK、CIE XYZ等；后者包括YCC/YUV、Lab，以及一批“色相类颜色空间”。CIE XYZ是定义一切颜色空间的基准，很奇妙的是，它既属于基色颜色空间，也属于色、亮分离颜色空间，是贯穿两者的枢纽。色、亮分离颜色空间中的子类型”色相类颜色空间“，是把颜色分成一个表亮属性和两个表色属性，其中有一个表色属性是色相，而色相以外的两个属性可以选用不同的变量来定义，色相的概念不变，因此就构成一族共同使用色相属性，另加表亮属性和表色属性各一个组成的颜色空间，它们是颜色空间中的一个家族，暂且统称为HSB颜色空间。
 
 \subsubsection{RGB颜色空间}
 
@@ -318,9 +318,10 @@ Itti1998模型~\cite{itti1998model}中用到。颜色信息由视网膜的三种
 
 数字图像一般只有红、绿、蓝三个颜色通道，为了得到黄色通道，Itti根据归一化后的,使用下面的公式计算广义上的红、绿、蓝、黄四个通道:
 \begin{align}
-R = r-\frac{g+b}{2}\\
-G = r-\frac{r+b}{2}\\
-B = r-\frac{r+g}{2}
+R & = r-\frac{g+b}{2}\\
+G & = r-\frac{r+b}{2}\\
+B & = r-\frac{r+g}{2}\\
+Y & = r+g-2(|r-g|+b)
 \end{align}
 接下来利用这四个通道计算红-绿、蓝-黄颜色对。Itti模型巧妙地利用绝对值，表示了两个相反的颜色对中兴奋的那一种。因此红-绿与绿-红颜色对可以用一个公式表示:
 \begin{align}
@@ -336,7 +337,7 @@ g(x, y; \lambda, \theta, \psi, \delta, \gamma) = exp\left(-\frac{x'^2+\gamma^2y'
 \end{align}
 其中$x'=xcos\theta+ysin\theta$，$y'=-xsin\theta+ycos\theta$。公式中$\lambda$表示余弦函数的波长，$\theta$表示Gabor滤波器的方向，$\psi$表示相位，$\gamma$表示空间长宽比，$\delta$表示高斯包络的标准差。
 
-由于初级视觉皮层中有几千万个细胞，无法用模型将它们全部表示出来，Itti对这种生理结构进行了适当的简化。通过比较生理实验结果与模型的结果，固定次要变量，设置$ λ = 7$，$\psi= 0$，$\gamma = 1$，$\delta = 2.333$。而主要的变量是$\theta$，对 应着 Gabor滤波器的方向,Itti将连续的方向离散化,选择了4个最有代表性 的方向：$0^{\circ}$，$45^{\circ}$，$90^{\circ}$，$135^{\circ}$，这样就构造出4个Gabor滤波器，分别对输入图像滤波，得到 4 个方向特征图，记作$O(\theta)$，其中$\theta=0^{\circ}$，$45^{\circ}$，$90^{\circ}$，$135^{\circ}$。
+由于初级视觉皮层中有几千万个细胞，无法用模型将它们全部表示出来，Itti对这种生理结构进行了适当的简化。通过比较生理实验结果与模型的结果，固定次要变量，设置$ \lambda = 7$，$\psi= 0$，$\gamma = 1$，$\delta = 2.333$。而主要的变量是$\theta$，对 应着 Gabor滤波器的方向,Itti将连续的方向离散化,选择了4个最有代表性 的方向：$0^{\circ}$，$45^{\circ}$，$90^{\circ}$，$135^{\circ}$，这样就构造出4个Gabor滤波器，分别对输入图像滤波，得到 4 个方向特征图，记作$O(\theta)$，其中$\theta=0^{\circ}$，$45^{\circ}$，$90^{\circ}$，$135^{\circ}$。
 
 \subsection{SIFT特征}
 
@@ -365,7 +366,7 @@ SIFT特征一般用于匹配，在eye fixation prediction中有用到，而在�
 
 \section{基于区域的feature contrasts}
 
-这里的feature contrasts是指由某种visual cue(比如颜色、纹理、位置等)对图像中两个区域$r_i$、$r_j$求出的区域间对比度。
+这里的feature contrasts是指由某种visual cue(比如颜色、纹理等)对图像中两个区域$r_i$、$r_j$求出的区域间对比度。对于某种feature contrasts(比如颜色有三通道)，既可以某区域与其它区域之间的颜色对比度值，也可以对三通道分别求解，得到一个颜色特征对比度向量。
 
 基于区域的显著性检测方法一般会先对图像进行超像素分割，然后提取超像素区域内的特征，再根据特征计算区域间的对比度，然后通过一定的机制求出最终的显著图。
 
@@ -394,6 +395,8 @@ C_i = \sum_{j=1}^{n}w(R_i)\Phi(i, j)||c_i-c_j||_2
 D_c(r_i, r_j) = ||\mu_{c, i}-\mu_{c, j}||^2\cdot \left(\frac{\sigma_{c, i}^2}{n_i}+\frac{\sigma_{c, j}^2}{n_j}\right)^{-\frac{1}{2}}
 \end{align}
 其中$\mu_{c, i}$和$\mu_{c, j}$分别表示区域$r_i$和$r_j$内的颜色均值，$\sigma_{c, i}^2$和$\sigma_{c, j}^2$表示方差，$n_i$和$n_j$表示相应区域内像素的个数。
+
+DRFI~\cite{jianghuaizu2013salient}中用到color contrast，但这篇论文中用到的是特征对比度向量，
 
 \subsubsection{颜色直方图}
 
@@ -427,7 +430,7 @@ DRFI方法中关于图像RGB空间的颜色直方图代码如下：
   \subfigure[]{ 
     \label{fig: RGBhistogram: b} %% label for second subfigure 
     \includegraphics[width=0.45\textwidth]{RGBhistogram1.png}} 
-  \caption{RGB空间的颜色直方图}
+  \caption{RGB空间的颜色直方图}    
   \label{fig: RGBhistogram} %% label for entire figure 
 \end{figure}
 
@@ -623,7 +626,7 @@ LM滤波结果的方差
 
 SDSP~\cite{zhang2013sdsp}中将Location Prior描述为：处于图像偏中央位置的物体更能吸引人的注意。这里Location Prior是按像素级计算的，定义如下：
 \begin{align}
-S_D(x) = exp\left(-\frac{||x-c||_2^2}{\sigma_D^2}\right)
+S_D(\textbf{x}) = exp\left(-\frac{||\textbf{x}-\textbf{c}||_2^2}{\sigma_D^2}\right)
 \end{align}
 效果如图~\ref{fig: SDSPCenterPrior}。
 \begin{figure}[!ht]
@@ -838,6 +841,14 @@ $S(i)$和$S(i)$分别表示节点$i$和$j$的所要求的显著值，$S_{in}(i)$
 
 条件随机场(Conditional Random Fields, CRFs)最早由Lafferty等人~\cite{lafferty2001conditional}于2001年提出，其模型思想主要来源于最大熵模型。
 
+论文``An Introduction to Conditional Random Fields for Relational Learning''：
+
+Relational data 有以下两点特性：第一，我们期望进行建模的实体相互之间是有统计依赖关系的。第二，每个实体都有丰富的特征可以帮助我们对它进行分类。比如要对网页进行分类，每个网页上的文字提供了很多关于该网页所属类别的信息，但是每个网页的超链接可以表示它与相关网页的关系，因而能帮助我们进行分类。通常用图的形式来表示这种实体之间的依赖关系。
+
+通常用图模型来表示联合概率密度分布$p(\mathbf{y}, \mathbf{x})$：$\mathbf{y}$表示我们要预测的实体的属性，$\mathbf{x}$表示我们对实体所观察到的知识。
+
+
+
 
 马尔可夫随机场
 
@@ -896,7 +907,7 @@ $f_c(\textbf{x}_p, \textbf{x}_q, y_p, y_q)$与论文~\cite{liu2011learning}中�
 \begin{align}
 f_c(\textbf{x}_p, \textbf{x}_q, y_p, y_q) = -\textbf{1}(y_p\ne y_q)exp(-\eta||I(p)-I(q)||)
 \end{align}
-其中，$||I(p)-I(q)||$是RGB颜色空间中像素$p$和$q$之间的差异。$\eta$
+其中，$||I(p)-I(q)||$是RGB颜色空间中像素$p$和$q$之间的差异。$\eta$被设定为$(2< ||I(p)-I(q)||^2>)^{-1}$，其中$< . >$表示expectation operator。
 
 
 
